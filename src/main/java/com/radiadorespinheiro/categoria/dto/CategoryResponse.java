@@ -1,0 +1,4 @@
+package com.radiadorespinheiro.categoria.dto;
+
+public class CategoryResponse {
+}
