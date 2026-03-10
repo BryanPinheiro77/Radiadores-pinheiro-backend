@@ -1,4 +1,3 @@
 package com.radiadorespinheiro.usuario.dto;
 
-public class UserResponse {
-}
+public record UserResponse(Long id, String name, String login, boolean active) {}
