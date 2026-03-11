@@ -61,6 +61,7 @@ public class CategoryService {
         findOrThrow(id);
         categoryRepository.deleteById(id);
     }
+
     private Category findOrThrow(Long id) {
         return categoryRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Category with id '" + id + "' not found."));

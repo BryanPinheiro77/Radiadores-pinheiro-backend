@@ -3,12 +3,14 @@ package com.radiadorespinheiro.categoria.controller;
 import com.radiadorespinheiro.categoria.dto.CategoryRequest;
 import com.radiadorespinheiro.categoria.dto.CategoryResponse;
 import com.radiadorespinheiro.categoria.service.CategoryService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Categories", description = "Category management endpoints")
 @RestController
 @RequestMapping("/categories")
 public class CategoryController {
