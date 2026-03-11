@@ -1,4 +1,8 @@
 package com.radiadorespinheiro.categoria.dto;
 
-public class CategoryRequest {
-}
+import jakarta.validation.constraints.NotBlank;
+
+public record CategoryRequest(
+        String name,
+        String description
+) {}

@@ -3,6 +3,7 @@ package com.radiadorespinheiro.usuario.controller;
 import com.radiadorespinheiro.usuario.dto.CreateUserRequest;
 import com.radiadorespinheiro.usuario.dto.UserResponse;
 import com.radiadorespinheiro.usuario.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +21,7 @@ public class UserController {
         this.userService = userService;
     }
 
+    @Operation(summary = "Create user", description = "Creates a new user with encrypted password")
     @PostMapping
     public ResponseEntity<UserResponse> create(@Valid @RequestBody CreateUserRequest createUserRequest) {
         return ResponseEntity.ok(userService.create(createUserRequest));
