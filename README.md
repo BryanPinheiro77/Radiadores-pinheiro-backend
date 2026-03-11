@@ -115,3 +115,8 @@ com.radiadorespinheiro
 
 - **Bryan Pinheiro** — [@BryanPinheiro77](https://github.com/BryanPinheiro77)
 - **Luiz Fernando** - [@LuizFernandoReisFranca](https://github.com/luizfernandoreisfranca)
+
+  
+## ⚖️ Licença
+
+Este projeto está licenciado sob a [MIT License](LICENSE).
