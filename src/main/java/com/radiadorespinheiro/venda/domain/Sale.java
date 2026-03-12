@@ -29,6 +29,15 @@ public class Sale {
     private LocalDateTime saleDate;
 
     @Column(nullable = false)
+    private BigDecimal subtotal;
+
+    @Column
+    private BigDecimal discountValue;
+
+    @Column
+    private BigDecimal discountPercentual;
+
+    @Column(nullable = false)
     private BigDecimal totalAmount;
 
     @Column
