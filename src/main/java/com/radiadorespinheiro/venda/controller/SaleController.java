@@ -6,6 +6,9 @@ import com.radiadorespinheiro.venda.service.SaleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,10 +31,11 @@ public class SaleController {
         return ResponseEntity.ok(saleService.create(request));
     }
 
-    @Operation(summary = "List all sales")
+    @Operation(summary = "List all sales (paginated)")
     @GetMapping
-    public ResponseEntity<List<SaleResponse>> findAll() {
-        return ResponseEntity.ok(saleService.findAll());
+    public ResponseEntity<Page<SaleResponse>> findAll(
+            @PageableDefault(size = 10, sort = "saleDate") Pageable pageable) {
+        return ResponseEntity.ok(saleService.findAll(pageable));
     }
 
     @Operation(summary = "Find sale by ID")

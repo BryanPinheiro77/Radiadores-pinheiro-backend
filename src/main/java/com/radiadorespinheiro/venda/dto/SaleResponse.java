@@ -8,6 +8,9 @@ public record SaleResponse(
         Long id,
         String customerName,
         LocalDateTime saleDate,
+        BigDecimal subtotal,
+        BigDecimal discountValue,
+        BigDecimal discountPercentual,
         BigDecimal totalAmount,
         String notes,
         List<SaleItemResponse> items

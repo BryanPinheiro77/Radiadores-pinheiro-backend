@@ -8,6 +8,8 @@ import com.radiadorespinheiro.venda.domain.Sale;
 import com.radiadorespinheiro.venda.domain.SaleItem;
 import com.radiadorespinheiro.venda.dto.*;
 import com.radiadorespinheiro.venda.repository.SaleRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,13 +34,32 @@ public class SaleService {
                 .map(this::buildItem)
                 .toList();
 
-        BigDecimal total = items.stream()
+        // Validação: não pode ter os dois tipos de desconto
+        if (request.discountValue() != null && request.discountPercentual() != null) {
+            throw new BusinessException("Use either discountValue or discountPercentual, not both");
+        }
+
+        BigDecimal subtotal = items.stream()
                 .map(SaleItem::getTotalPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        BigDecimal discount = BigDecimal.ZERO;
+        if (request.discountValue() != null) {
+            discount = request.discountValue();
+        } else if (request.discountPercentual() != null) {
+            discount = subtotal.multiply(request.discountPercentual().divide(BigDecimal.valueOf(100)));
+        }
+
+        BigDecimal total = subtotal.subtract(discount);
+        if (total.compareTo(BigDecimal.ZERO) < 0) {
+            throw new BusinessException("Discount cannot be greater than the total amount");
+        }
         Sale sale = Sale.builder()
                 .customerName(request.customerName())
                 .saleDate(LocalDateTime.now())
+                .subtotal(subtotal)
+                .discountValue(request.discountValue())
+                .discountPercentual(request.discountPercentual())
                 .totalAmount(total)
                 .notes(request.notes())
                 .items(items)
@@ -49,10 +70,8 @@ public class SaleService {
         return toResponse(saleRepository.save(sale));
     }
 
-    public List<SaleResponse> findAll() {
-        return saleRepository.findAll().stream()
-                .map(this::toResponse)
-                .toList();
+    public Page<SaleResponse> findAll(Pageable pageable) {
+        return saleRepository.findAll(pageable).map(this::toResponse);
     }
 
     public SaleResponse findById(Long id) {
@@ -108,7 +127,7 @@ public class SaleService {
             }
         });
 
-        saleRepository.delete(sale);
+        saleRepository.deleteById(id);
     }
 
     private Sale findOrThrow(Long id) {
@@ -125,6 +144,7 @@ public class SaleService {
 
         return new SaleResponse(
                 sale.getId(), sale.getCustomerName(), sale.getSaleDate(),
+                sale.getSubtotal(), sale.getDiscountValue(), sale.getDiscountPercentual(),
                 sale.getTotalAmount(), sale.getNotes(), itemResponses);
     }
 }
