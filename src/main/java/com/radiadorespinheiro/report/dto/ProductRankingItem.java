@@ -1,4 +1,4 @@
-package com.radiadorespinheiro.relatorio.dto;
+package com.radiadorespinheiro.report.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,10 +1,10 @@
 package com.radiadorespinheiro.expense.controller;
 
-import com.radiadorespinheiro.despesa.domain.Expense;
-import com.radiadorespinheiro.despesa.domain.ExpenseCategory;
-import com.radiadorespinheiro.despesa.dto.ExpenseRequest;
-import com.radiadorespinheiro.despesa.dto.ExpenseResponse;
-import com.radiadorespinheiro.despesa.service.ExpenseService;
+import com.radiadorespinheiro.expense.domain.Expense;
+import com.radiadorespinheiro.expense.domain.ExpenseCategory;
+import com.radiadorespinheiro.expense.dto.ExpenseRequest;
+import com.radiadorespinheiro.expense.dto.ExpenseResponse;
+import com.radiadorespinheiro.expense.service.ExpenseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;

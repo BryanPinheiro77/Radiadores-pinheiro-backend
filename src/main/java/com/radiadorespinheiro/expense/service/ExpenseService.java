@@ -1,11 +1,11 @@
-package com.radiadorespinheiro.despesa.service;
+package com.radiadorespinheiro.expense.service;
 
-import com.radiadorespinheiro.despesa.domain.Expense;
-import com.radiadorespinheiro.despesa.domain.ExpenseCategory;
-import com.radiadorespinheiro.despesa.dto.ExpenseRequest;
-import com.radiadorespinheiro.despesa.dto.ExpenseResponse;
-import com.radiadorespinheiro.despesa.repository.ExpenseCategoryRepository;
-import com.radiadorespinheiro.despesa.repository.ExpenseRepository;
+import com.radiadorespinheiro.expense.domain.Expense;
+import com.radiadorespinheiro.expense.domain.ExpenseCategory;
+import com.radiadorespinheiro.expense.dto.ExpenseRequest;
+import com.radiadorespinheiro.expense.dto.ExpenseResponse;
+import com.radiadorespinheiro.expense.repository.ExpenseCategoryRepository;
+import com.radiadorespinheiro.expense.repository.ExpenseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

@@ -1,7 +1,7 @@
-package com.radiadorespinheiro.relatorio.controller;
+package com.radiadorespinheiro.report.controller;
 
-import com.radiadorespinheiro.relatorio.dto.ReportResponse;
-import com.radiadorespinheiro.relatorio.service.ReportService;
+import com.radiadorespinheiro.report.dto.ReportResponse;
+import com.radiadorespinheiro.report.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;

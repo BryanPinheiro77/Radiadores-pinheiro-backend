@@ -1,12 +1,12 @@
-package com.radiadorespinheiro.relatorio.service;
+package com.radiadorespinheiro.report.service;
 
-import com.radiadorespinheiro.despesa.repository.ExpenseRepository;
-import com.radiadorespinheiro.produto.domain.Product;
-import com.radiadorespinheiro.produto.repository.ProductRepository;
-import com.radiadorespinheiro.relatorio.dto.LowStockItem;
-import com.radiadorespinheiro.relatorio.dto.ProductRankingItem;
-import com.radiadorespinheiro.relatorio.dto.ReportResponse;
-import com.radiadorespinheiro.venda.repository.SaleRepository;
+import com.radiadorespinheiro.expense.repository.ExpenseRepository;
+import com.radiadorespinheiro.product.domain.Product;
+import com.radiadorespinheiro.product.repository.ProductRepository;
+import com.radiadorespinheiro.report.dto.LowStockItem;
+import com.radiadorespinheiro.report.dto.ProductRankingItem;
+import com.radiadorespinheiro.report.dto.ReportResponse;
+import com.radiadorespinheiro.sale.repository.SaleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
