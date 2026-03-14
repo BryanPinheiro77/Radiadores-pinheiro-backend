@@ -4,7 +4,7 @@ import com.radiadorespinheiro.auth.config.JwtUtil;
 import com.radiadorespinheiro.auth.dto.LoginRequest;
 import com.radiadorespinheiro.auth.dto.LoginResponse;
 import com.radiadorespinheiro.common.exception.BusinessException;
-import com.radiadorespinheiro.usuario.repository.UserRepository;
+import com.radiadorespinheiro.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

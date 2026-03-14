@@ -1,6 +1,6 @@
 package com.radiadorespinheiro.auth.config;
 
-import com.radiadorespinheiro.usuario.repository.UserRepository;
+import com.radiadorespinheiro.user.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
