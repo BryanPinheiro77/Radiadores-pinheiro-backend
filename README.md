@@ -11,6 +11,7 @@ Sistema de Gestão Operacional para a oficina Radiadores Pinheiro.
 - **Spring Data JPA** + **Hibernate**
 - **PostgreSQL** (Supabase)
 - **SpringDoc OpenAPI** (Swagger UI)
+- **OpenPDF** (geração de PDF)
 - **Lombok**
 - **Maven**
 
@@ -21,13 +22,13 @@ Sistema de Gestão Operacional para a oficina Radiadores Pinheiro.
 | Módulo | Status |
 |--------|--------|
 | `auth` | ✅ Concluído |
-| `usuario` | ✅ Concluído |
-| `categoria` | ✅ Concluído |
-| `produto` | ✅ Concluído |
-| `venda` | 🚧 Em desenvolvimento |
-| `despesa` | 🚧 Em desenvolvimento |
-| `fornecedor` | 🚧 Em desenvolvimento |
-| `relatorio` | 🚧 Em desenvolvimento |
+| `user` | ✅ Concluído |
+| `category` | ✅ Concluído |
+| `product` | ✅ Concluído |
+| `sale` | ✅ Concluído |
+| `despesa` | ✅ Concluído |
+| `restock` | ✅ Concluído |
+| `report` | ✅ Concluído |
 
 ---
 
@@ -38,6 +39,7 @@ Sistema de Gestão Operacional para a oficina Radiadores Pinheiro.
 - Java 21+
 - Maven
 - Conta no [Supabase](https://supabase.com)
+- IntelliJ IDEA (recomendado)
 
 ### Configuração
 
@@ -81,6 +83,21 @@ Com a aplicação rodando, acesse:
 
 ---
 
+## 🗂️ Endpoints principais
+
+| Módulo | Base URL |
+|--------|----------|
+| Auth | `/auth/login` |
+| Usuários | `/users` |
+| Categorias | `/categories` |
+| Produtos | `/products` |
+| Vendas | `/sales` |
+| Despesas | `/api/expenses` |
+| Reposição de estoque | `/restock/suggestions`, `/restock/orders` |
+| Relatórios | `/api/reports` |
+
+---
+
 ## 🌿 Branches
 
 | Branch | Descrição |
@@ -99,13 +116,13 @@ Com a aplicação rodando, acesse:
 ```
 com.radiadorespinheiro
 ├── auth/          # Autenticação JWT
-├── usuario/       # Gestão de usuários
-├── categoria/     # Categorias de produto
-├── produto/       # Produtos e estoque
-├── venda/         # Vendas e serviços
-├── despesa/       # Despesas
-├── fornecedor/    # Fornecedores
-├── relatorio/     # Relatórios e indicadores
+├── user/          # Gestão de usuários
+├── category/      # Categorias de produto
+├── product/       # Produtos e estoque
+├── sale/          # Vendas e serviços
+├── expense/       # Despesas e categorias de despesa
+├── restock/       # Reposição de estoque e geração de PDF
+├── report/        # Relatórios e indicadores financeiros
 └── common/        # Exceções, configurações globais
 ```
 
@@ -114,9 +131,10 @@ com.radiadorespinheiro
 ## 👥 Time
 
 - **Bryan Pinheiro** — [@BryanPinheiro77](https://github.com/BryanPinheiro77)
-- **Luiz Fernando** - [@LuizFernandoReisFranca](https://github.com/luizfernandoreisfranca)
+- **Luiz Fernando** — [@LuizFernandoReisFranca](https://github.com/luizfernandoreisfranca)
 
-  
+---
+
 ## ⚖️ Licença
 
 Este projeto está licenciado sob a [MIT License](LICENSE).
