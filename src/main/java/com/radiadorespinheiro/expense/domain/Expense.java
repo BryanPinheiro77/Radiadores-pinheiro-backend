@@ -30,6 +30,16 @@ public class Expense {
     @Column(nullable = false)
     private LocalDate date;
 
+    @Enumerated(EnumType.STRING)
+    @Column
+    private ExpenseType expenseType;
+
+    @Column
+    private Integer totalInstallments;
+
+    @Column
+    private Integer currentInstallment;
+
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
     private ExpenseCategory category;

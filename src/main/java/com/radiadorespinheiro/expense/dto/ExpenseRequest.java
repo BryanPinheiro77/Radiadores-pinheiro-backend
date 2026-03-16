@@ -1,5 +1,6 @@
 package com.radiadorespinheiro.expense.dto;
 
+import com.radiadorespinheiro.expense.domain.ExpenseType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,4 +19,6 @@ public class ExpenseRequest {
     private LocalDate date;
     private Long categoryId;
     private String notes;
+    private ExpenseType expenseType;
+    private Integer totalInstallments;
 }
