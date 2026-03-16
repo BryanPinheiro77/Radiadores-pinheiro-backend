@@ -13,5 +13,6 @@ public record SaleItemRequest(
         @NotBlank String description,
         @NotNull @Min(value = 1, message = "Quantity must be at least 1") Integer quantity,
         @NotNull @DecimalMin(value = "0.01", message = "Unit price must be greater than zero") BigDecimal unitPrice,
-        Long categoryId
+        Long categoryId,
+        BigDecimal serviceCost
 ) {}
