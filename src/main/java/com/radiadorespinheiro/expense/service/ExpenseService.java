@@ -2,6 +2,7 @@ package com.radiadorespinheiro.expense.service;
 
 import com.radiadorespinheiro.expense.domain.Expense;
 import com.radiadorespinheiro.expense.domain.ExpenseCategory;
+import com.radiadorespinheiro.expense.domain.ExpenseType;
 import com.radiadorespinheiro.expense.dto.ExpenseRequest;
 import com.radiadorespinheiro.expense.dto.ExpenseResponse;
 import com.radiadorespinheiro.expense.repository.ExpenseCategoryRepository;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -42,7 +44,27 @@ public class ExpenseService {
 
     public ExpenseResponse save(ExpenseRequest request) {
         ExpenseCategory category = expenseCategoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new RuntimeException("Categoria não encontrada: " + request.getCategoryId()));
+                .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
+
+        if (request.getExpenseType() == ExpenseType.INSTALLMENT && request.getTotalInstallments() != null) {
+            // Cria todas as parcelas
+            List<Expense> installments = new ArrayList<>();
+            for (int i = 1; i <= request.getTotalInstallments(); i++) {
+                Expense expense = Expense.builder()
+                        .description(request.getDescription() + " (" + i + "/" + request.getTotalInstallments() + ")")
+                        .value(request.getValue())
+                        .date(request.getDate().plusMonths(i - 1))
+                        .category(category)
+                        .notes(request.getNotes())
+                        .expenseType(ExpenseType.INSTALLMENT)
+                        .totalInstallments(request.getTotalInstallments())
+                        .currentInstallment(i)
+                        .build();
+                installments.add(expense);
+            }
+            expenseRepository.saveAll(installments);
+            return toResponse(installments.get(0));
+        }
 
         Expense expense = Expense.builder()
                 .description(request.getDescription())
@@ -50,6 +72,9 @@ public class ExpenseService {
                 .date(request.getDate())
                 .category(category)
                 .notes(request.getNotes())
+                .expenseType(request.getExpenseType() != null ? request.getExpenseType() : ExpenseType.SINGLE)
+                .totalInstallments(null)
+                .currentInstallment(null)
                 .build();
 
         return toResponse(expenseRepository.save(expense));

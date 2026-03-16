@@ -1,5 +1,7 @@
 package com.radiadorespinheiro.sale.service;
 
+import com.radiadorespinheiro.category.domain.Category;
+import com.radiadorespinheiro.category.repository.CategoryRepository;
 import com.radiadorespinheiro.common.exception.BusinessException;
 import com.radiadorespinheiro.product.domain.Product;
 import com.radiadorespinheiro.product.repository.ProductRepository;
@@ -22,10 +24,12 @@ public class SaleService {
 
     private final SaleRepository saleRepository;
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
 
-    public SaleService(SaleRepository saleRepository, ProductRepository productRepository) {
+    public SaleService(SaleRepository saleRepository, ProductRepository productRepository, CategoryRepository categoryRepository) {
         this.saleRepository = saleRepository;
         this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     @Transactional
@@ -34,7 +38,6 @@ public class SaleService {
                 .map(this::buildItem)
                 .toList();
 
-        // Validação: não pode ter os dois tipos de desconto
         if (request.discountValue() != null && request.discountPercentual() != null) {
             throw new BusinessException("Use either discountValue or discountPercentual, not both");
         }
@@ -54,6 +57,7 @@ public class SaleService {
         if (total.compareTo(BigDecimal.ZERO) < 0) {
             throw new BusinessException("Discount cannot be greater than the total amount");
         }
+
         Sale sale = Sale.builder()
                 .customerName(request.customerName())
                 .saleDate(LocalDateTime.now())
@@ -105,12 +109,19 @@ public class SaleService {
                     .build();
         }
 
+        Category category = null;
+        if (req.categoryId() != null) {
+            category = categoryRepository.findById(req.categoryId()).orElse(null);
+        }
+
         return SaleItem.builder()
                 .description(req.description())
                 .quantity(req.quantity())
                 .unitPrice(req.unitPrice())
                 .totalPrice(total)
                 .itemType(ItemType.SERVICE)
+                .category(category)
+                .serviceCost(req.serviceCost())
                 .build();
     }
 
@@ -118,7 +129,6 @@ public class SaleService {
     public void delete(Long id) {
         Sale sale = findOrThrow(id);
 
-        // Devolve estoque dos itens do tipo PRODUCT
         sale.getItems().forEach(item -> {
             if (item.getItemType() == ItemType.PRODUCT && item.getProduct() != null) {
                 Product product = item.getProduct();
@@ -138,8 +148,14 @@ public class SaleService {
     private SaleResponse toResponse(Sale sale) {
         List<SaleItemResponse> itemResponses = sale.getItems().stream()
                 .map(i -> new SaleItemResponse(
-                        i.getId(), i.getItemType(), i.getDescription(),
-                        i.getQuantity(), i.getUnitPrice(), i.getTotalPrice()))
+                        i.getId(),
+                        i.getItemType(),
+                        i.getDescription(),
+                        i.getQuantity(),
+                        i.getUnitPrice(),
+                        i.getTotalPrice(),
+                        i.getCategory() != null ? i.getCategory().getName() : null,
+                        i.getServiceCost()))
                 .toList();
 
         return new SaleResponse(
