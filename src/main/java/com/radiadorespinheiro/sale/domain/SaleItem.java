@@ -39,6 +39,9 @@ public class SaleItem {
     @Column(nullable = false)
     private BigDecimal unitPrice;
 
+    @Column
+    private BigDecimal serviceCost;
+
     @Column(nullable = false)
     private BigDecimal totalPrice;
 

@@ -6,6 +6,7 @@ import com.radiadorespinheiro.product.repository.ProductRepository;
 import com.radiadorespinheiro.report.dto.LowStockItem;
 import com.radiadorespinheiro.report.dto.ProductRankingItem;
 import com.radiadorespinheiro.report.dto.ReportResponse;
+import com.radiadorespinheiro.sale.domain.ItemType;
 import com.radiadorespinheiro.sale.repository.SaleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -65,9 +67,16 @@ public class ReportService {
         return saleRepository.findBySaleDateBetween(start, end)
                 .stream()
                 .flatMap(sale -> sale.getItems().stream())
-                .filter(item -> item.getProduct() != null)
-                .map(item -> item.getProduct().getCostPrice()
-                        .multiply(BigDecimal.valueOf(item.getQuantity())))
+                .map(item -> {
+                    if (item.getItemType() == ItemType.SERVICE && item.getServiceCost() != null) {
+                        return item.getServiceCost().multiply(BigDecimal.valueOf(item.getQuantity()));
+                    }
+                    if (item.getProduct() != null) {
+                        return item.getProduct().getCostPrice()
+                                .multiply(BigDecimal.valueOf(item.getQuantity()));
+                    }
+                    return BigDecimal.ZERO;
+                })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
@@ -98,6 +107,137 @@ public class ReportService {
                 })
                 .sorted((a, b) -> b.getTotalQuantitySold().compareTo(a.getTotalQuantitySold()))
                 .limit(10)
+                .toList();
+    }
+
+    public Map<String, BigDecimal> getTotalBalance() {
+        BigDecimal totalRevenue = saleRepository.findAll()
+                .stream()
+                .map(sale -> sale.getTotalAmount())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalExpenses = expenseRepository.findAll()
+                .stream()
+                .map(expense -> expense.getValue())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal balance = totalRevenue.subtract(totalExpenses);
+
+        return Map.of(
+                "totalRevenue", totalRevenue,
+                "totalExpenses", totalExpenses,
+                "balance", balance
+        );
+    }
+
+    public List<Map<String, Object>> getCategoryRevenue(LocalDate start, LocalDate end) {
+        LocalDateTime startDt = start.atStartOfDay();
+        LocalDateTime endDt = end.atTime(23, 59, 59);
+
+        return saleRepository.findBySaleDateBetween(startDt, endDt)
+                .stream()
+                .flatMap(sale -> sale.getItems().stream())
+                .filter(item -> {
+                    if (item.getCategory() != null) return true;
+                    if (item.getProduct() != null && item.getProduct().getCategory() != null) return true;
+                    return false;
+                })
+                .collect(java.util.stream.Collectors.groupingBy(
+                        item -> {
+                            if (item.getCategory() != null) return item.getCategory().getName();
+                            return item.getProduct().getCategory().getName();
+                        },
+                        java.util.stream.Collectors.toList()
+                ))
+                .entrySet().stream()
+                .map(entry -> {
+                    String categoryName = entry.getKey();
+                    var items = entry.getValue();
+                    BigDecimal totalRevenue = items.stream()
+                            .map(i -> i.getTotalPrice())
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    Map<String, Object> result = new java.util.HashMap<>();
+                    result.put("categoryName", categoryName);
+                    result.put("totalRevenue", totalRevenue);
+                    return result;
+                })
+                .sorted((a, b) -> ((BigDecimal) b.get("totalRevenue"))
+                        .compareTo((BigDecimal) a.get("totalRevenue")))
+                .toList();
+    }
+
+    public List<Map<String, Object>> getCategoryExpenses(LocalDate start, LocalDate end) {
+        return expenseRepository.findByDateBetween(start, end)
+                .stream()
+                .filter(expense -> expense.getCategory() != null)
+                .collect(java.util.stream.Collectors.groupingBy(
+                        expense -> expense.getCategory().getName(),
+                        java.util.stream.Collectors.toList()
+                ))
+                .entrySet().stream()
+                .map(entry -> {
+                    String categoryName = entry.getKey();
+                    var expenses = entry.getValue();
+                    BigDecimal totalExpenses = expenses.stream()
+                            .map(e -> e.getValue())
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    Map<String, Object> result = new java.util.HashMap<>();
+                    result.put("categoryName", categoryName);
+                    result.put("totalExpenses", totalExpenses);
+                    return result;
+                })
+                .sorted((a, b) -> ((BigDecimal) b.get("totalExpenses"))
+                        .compareTo((BigDecimal) a.get("totalExpenses")))
+                .toList();
+    }
+
+    public List<Map<String, Object>> getCategoryProfit(LocalDate start, LocalDate end) {
+        LocalDateTime startDt = start.atStartOfDay();
+        LocalDateTime endDt = end.atTime(23, 59, 59);
+
+        return saleRepository.findBySaleDateBetween(startDt, endDt)
+                .stream()
+                .flatMap(sale -> sale.getItems().stream())
+                .filter(item -> {
+                    if (item.getCategory() != null) return true;
+                    if (item.getProduct() != null && item.getProduct().getCategory() != null) return true;
+                    return false;
+                })
+                .collect(java.util.stream.Collectors.groupingBy(
+                        item -> {
+                            if (item.getCategory() != null) return item.getCategory().getName();
+                            return item.getProduct().getCategory().getName();
+                        },
+                        java.util.stream.Collectors.toList()
+                ))
+                .entrySet().stream()
+                .map(entry -> {
+                    String categoryName = entry.getKey();
+                    var items = entry.getValue();
+                    BigDecimal totalRevenue = items.stream()
+                            .map(i -> i.getTotalPrice())
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    BigDecimal totalCost = items.stream()
+                            .map(i -> {
+                                if (i.getItemType() == ItemType.SERVICE && i.getServiceCost() != null) {
+                                    return i.getServiceCost().multiply(BigDecimal.valueOf(i.getQuantity()));
+                                }
+                                if (i.getProduct() != null) {
+                                    return i.getProduct().getCostPrice()
+                                            .multiply(BigDecimal.valueOf(i.getQuantity()));
+                                }
+                                return BigDecimal.ZERO;
+                            })
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    BigDecimal totalProfit = totalRevenue.subtract(totalCost);
+                    Map<String, Object> result = new java.util.HashMap<>();
+                    result.put("categoryName", categoryName);
+                    result.put("totalRevenue", totalRevenue);
+                    result.put("totalProfit", totalProfit);
+                    return result;
+                })
+                .sorted((a, b) -> ((BigDecimal) b.get("totalProfit"))
+                        .compareTo((BigDecimal) a.get("totalProfit")))
                 .toList();
     }
 

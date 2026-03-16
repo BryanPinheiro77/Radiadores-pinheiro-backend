@@ -121,6 +121,7 @@ public class SaleService {
                 .totalPrice(total)
                 .itemType(ItemType.SERVICE)
                 .category(category)
+                .serviceCost(req.serviceCost())
                 .build();
     }
 
@@ -153,7 +154,8 @@ public class SaleService {
                         i.getQuantity(),
                         i.getUnitPrice(),
                         i.getTotalPrice(),
-                        i.getCategory() != null ? i.getCategory().getName() : null))
+                        i.getCategory() != null ? i.getCategory().getName() : null,
+                        i.getServiceCost()))
                 .toList();
 
         return new SaleResponse(
