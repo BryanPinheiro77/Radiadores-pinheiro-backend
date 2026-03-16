@@ -6,7 +6,8 @@ import com.radiadorespinheiro.product.repository.ProductRepository;
 import com.radiadorespinheiro.sale.domain.ItemType;
 import com.radiadorespinheiro.sale.domain.Sale;
 import com.radiadorespinheiro.sale.domain.SaleItem;
-import com.radiadorespinheiro.sale.dto.*;
+import com.radiadorespinheiro.sale.dto.SaleItemRequest;
+import com.radiadorespinheiro.sale.dto.SaleRequest;
 import com.radiadorespinheiro.sale.repository.SaleRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,9 +21,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class SaleServiceTest {
@@ -77,12 +80,26 @@ class SaleServiceTest {
         when(saleRepository.save(any())).thenReturn(sale);
 
         SaleItemRequest itemRequest = new SaleItemRequest(
-                ItemType.PRODUCT, 1L, "Radiador Ford Ka", 1, new BigDecimal("280.00"));
-        SaleRequest request = new SaleRequest("Fernando", null, null, null, List.of(itemRequest));
+                ItemType.PRODUCT,
+                1L,
+                "Radiador Ford Ka",
+                1,
+                new BigDecimal("280.00"),
+                null,
+                null
+        );
+
+        SaleRequest request = new SaleRequest(
+                "Fernando",
+                null,
+                null,
+                null,
+                List.of(itemRequest)
+        );
 
         saleService.create(request);
 
-        assertEquals(9, product.getStock()); // stock era 10, deve ser 9
+        assertEquals(9, product.getStock());
         verify(productRepository).save(product);
     }
 
@@ -92,8 +109,22 @@ class SaleServiceTest {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
 
         SaleItemRequest itemRequest = new SaleItemRequest(
-                ItemType.PRODUCT, 1L, "Radiador Ford Ka", 1, new BigDecimal("280.00"));
-        SaleRequest request = new SaleRequest("Fernando", null, null, null, List.of(itemRequest));
+                ItemType.PRODUCT,
+                1L,
+                "Radiador Ford Ka",
+                1,
+                new BigDecimal("280.00"),
+                null,
+                null
+        );
+
+        SaleRequest request = new SaleRequest(
+                "Fernando",
+                null,
+                null,
+                null,
+                List.of(itemRequest)
+        );
 
         assertThrows(BusinessException.class, () -> saleService.create(request));
     }
@@ -103,11 +134,22 @@ class SaleServiceTest {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
 
         SaleItemRequest itemRequest = new SaleItemRequest(
-                ItemType.PRODUCT, 1L, "Radiador", 1, new BigDecimal("280.00"));
+                ItemType.PRODUCT,
+                1L,
+                "Radiador",
+                1,
+                new BigDecimal("280.00"),
+                null,
+                null
+        );
+
         SaleRequest request = new SaleRequest(
-                "Fernando", null,
-                new BigDecimal("10.00"), new BigDecimal("10.00"),
-                List.of(itemRequest));
+                "Fernando",
+                null,
+                new BigDecimal("10.00"),
+                new BigDecimal("10.00"),
+                List.of(itemRequest)
+        );
 
         assertThrows(BusinessException.class, () -> saleService.create(request));
     }
@@ -118,8 +160,8 @@ class SaleServiceTest {
 
         saleService.delete(1L);
 
-        assertEquals(11, product.getStock()); // stock era 10, deve ser 11
-        verify(saleRepository).deleteById(1L); // troca delete por deleteById
+        assertEquals(11, product.getStock());
+        verify(saleRepository).deleteById(1L);
     }
 
     @Test
