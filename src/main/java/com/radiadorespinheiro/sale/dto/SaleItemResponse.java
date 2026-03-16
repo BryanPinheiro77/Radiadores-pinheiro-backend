@@ -9,5 +9,6 @@ public record SaleItemResponse(
         String description,
         Integer quantity,
         BigDecimal unitPrice,
-        BigDecimal totalPrice
+        BigDecimal totalPrice,
+        String categoryName
 ) {}

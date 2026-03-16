@@ -1,5 +1,6 @@
 package com.radiadorespinheiro.sale.domain;
 
+import com.radiadorespinheiro.category.domain.Category;
 import com.radiadorespinheiro.product.domain.Product;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -44,4 +45,8 @@ public class SaleItem {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ItemType itemType;
+
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category;
 }
