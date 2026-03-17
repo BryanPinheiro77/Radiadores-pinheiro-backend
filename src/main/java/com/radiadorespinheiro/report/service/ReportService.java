@@ -50,17 +50,11 @@ public class ReportService {
     }
 
     private BigDecimal getTotalRevenue(LocalDateTime start, LocalDateTime end) {
-        return saleRepository.findBySaleDateBetween(start, end)
-                .stream()
-                .map(sale -> sale.getTotalAmount())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return saleRepository.sumTotalAmountBetween(start, end);
     }
 
     private BigDecimal getTotalExpenses(LocalDate start, LocalDate end) {
-        return expenseRepository.findByDateBetween(start, end)
-                .stream()
-                .map(expense -> expense.getValue())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return expenseRepository.sumValueBetween(start, end);
     }
 
     private BigDecimal getTotalCost(LocalDateTime start, LocalDateTime end) {
@@ -111,18 +105,9 @@ public class ReportService {
     }
 
     public Map<String, BigDecimal> getTotalBalance() {
-        BigDecimal totalRevenue = saleRepository.findAll()
-                .stream()
-                .map(sale -> sale.getTotalAmount())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal totalExpenses = expenseRepository.findAll()
-                .stream()
-                .map(expense -> expense.getValue())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
+        BigDecimal totalRevenue = saleRepository.sumTotalAmount();
+        BigDecimal totalExpenses = expenseRepository.sumValue();
         BigDecimal balance = totalRevenue.subtract(totalExpenses);
-
         return Map.of(
                 "totalRevenue", totalRevenue,
                 "totalExpenses", totalExpenses,
