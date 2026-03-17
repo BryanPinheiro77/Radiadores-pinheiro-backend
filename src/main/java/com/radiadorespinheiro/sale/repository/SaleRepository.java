@@ -20,4 +20,20 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
 
     @Query("SELECT COALESCE(SUM(s.totalAmount), 0) FROM Sale s")
     BigDecimal sumTotalAmount();
+
+    @Query("""
+    SELECT COALESCE(SUM(
+        CASE
+            WHEN si.itemType = 'SERVICE' AND si.serviceCost IS NOT NULL
+                THEN si.serviceCost * si.quantity
+            WHEN si.product IS NOT NULL
+                THEN si.product.costPrice * si.quantity
+            ELSE 0
+        END
+    ), 0)
+    FROM SaleItem si
+    JOIN si.sale s
+    WHERE s.saleDate BETWEEN :start AND :end
+""")
+    BigDecimal sumTotalCostBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }

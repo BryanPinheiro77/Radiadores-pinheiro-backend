@@ -58,20 +58,7 @@ public class ReportService {
     }
 
     private BigDecimal getTotalCost(LocalDateTime start, LocalDateTime end) {
-        return saleRepository.findBySaleDateBetween(start, end)
-                .stream()
-                .flatMap(sale -> sale.getItems().stream())
-                .map(item -> {
-                    if (item.getItemType() == ItemType.SERVICE && item.getServiceCost() != null) {
-                        return item.getServiceCost().multiply(BigDecimal.valueOf(item.getQuantity()));
-                    }
-                    if (item.getProduct() != null) {
-                        return item.getProduct().getCostPrice()
-                                .multiply(BigDecimal.valueOf(item.getQuantity()));
-                    }
-                    return BigDecimal.ZERO;
-                })
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return saleRepository.sumTotalCostBetween(start, end);
     }
 
     private List<ProductRankingItem> getBestSellingProducts(LocalDateTime start, LocalDateTime end) {
