@@ -32,10 +32,9 @@ public class RestockService {
         this.restockOrderRepository = restockOrderRepository;
     }
 
-    //Busca produtos abaixo do estoque minimo, com filtro opcional por categoria
     public List<RestockSuggestionResponse> getSuggestions(Long categoryId) {
         List<Product> products = categoryId != null
-                ? productRepository.findByCategoryId(categoryId)
+                ? productRepository.findAllByCategory_Id(categoryId)
                 : productRepository.findAll();
 
         return products.stream()
@@ -51,8 +50,6 @@ public class RestockService {
                 .toList();
     }
 
-
-    //Salva o pedido com os itens editados pelo usuario
     @Transactional
     public RestockOrderResponse createOrder(RestockOrderRequest request) {
         List<RestockOrderItem> items = request.items().stream()
@@ -76,32 +73,27 @@ public class RestockService {
                 .toList();
     }
 
-    //Gera o pdf do pedido
-
-    public byte[] generatePdf(Long orderId){
+    public byte[] generatePdf(Long orderId) {
         RestockOrder order = restockOrderRepository.findById(orderId)
-                .orElseThrow(() -> new BusinessException("Restock order not found with id: " +  orderId));
+                .orElseThrow(() -> new BusinessException("Restock order not found with id: " + orderId));
 
-        try(ByteArrayOutputStream out = new ByteArrayOutputStream()){
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Document document = new Document(PageSize.A4);
             PdfWriter.getInstance(document, out);
             document.open();
 
-            //Titulo
             Font titleFont = new Font(Font.HELVETICA, 18, Font.BOLD);
             Paragraph title = new Paragraph("Pedido de Reposição de estoque", titleFont);
             title.setAlignment(Paragraph.ALIGN_CENTER);
             document.add(title);
 
-            //Data
             Font subFont = new Font(Font.HELVETICA, 10, Font.NORMAL, Color.GRAY);
             String dateStr = order.getCreatedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
             Paragraph date = new Paragraph("Data: " + dateStr, subFont);
             date.setAlignment(Paragraph.ALIGN_CENTER);
             document.add(date);
 
-            // Observações
-            if(order.getNotes() != null && !order.getNotes().isBlank()){
+            if (order.getNotes() != null && !order.getNotes().isBlank()) {
                 document.add(new Paragraph(" "));
                 Font notesFont = new Font(Font.HELVETICA, 10, Font.ITALIC);
                 document.add(new Paragraph("Observações: " + order.getNotes(), notesFont));
@@ -109,14 +101,13 @@ public class RestockService {
 
             document.add(new Paragraph(" "));
 
-            //tabela
             PdfPTable table = new PdfPTable(5);
             table.setWidthPercentage(100);
             table.setWidths(new float[]{3f, 2f, 1.5f, 1.5f, 1.5f});
 
-            // Cabeçalho da tabela
             Font headerFont = new Font(Font.HELVETICA, 10, Font.BOLD, Color.WHITE);
             String[] headers = {"Produto", "Categoria", "Estoque Atual", "Qtd Sugerida", "Qtd Pedida"};
+
             for (String h : headers) {
                 PdfPCell cell = new PdfPCell(new Phrase(h, headerFont));
                 cell.setBackgroundColor(new Color(41, 128, 185));
@@ -125,10 +116,10 @@ public class RestockService {
                 table.addCell(cell);
             }
 
-            //Linhas da tabela
             Font cellFont = new Font(Font.HELVETICA, 9);
             boolean alternate = false;
-            for(RestockOrderItem item : order.getItems()){
+
+            for (RestockOrderItem item : order.getItems()) {
                 Color rowColor = alternate ? new Color(236, 240, 241) : Color.WHITE;
                 alternate = !alternate;
 
@@ -140,7 +131,7 @@ public class RestockService {
                         String.valueOf(item.getOrderedQuantity())
                 };
 
-                for ( int i = 0; i < values.length; i++ ) {
+                for (int i = 0; i < values.length; i++) {
                     PdfPCell cell = new PdfPCell(new Phrase(values[i], cellFont));
                     cell.setBackgroundColor(rowColor);
                     cell.setPadding(5);
@@ -154,10 +145,11 @@ public class RestockService {
 
             return out.toByteArray();
 
-        } catch(Exception e) {
+        } catch (Exception e) {
             throw new BusinessException("Error generating PDF: " + e.getMessage());
         }
     }
+
     private RestockOrderItem buildItem(RestockOrderItemRequest req) {
         Product product = productRepository.findById(req.productId())
                 .orElseThrow(() -> new BusinessException("Product not found with id: " + req.productId()));
@@ -184,5 +176,4 @@ public class RestockService {
 
         return new RestockOrderResponse(order.getId(), order.getCreatedAt(), order.getNotes(), items);
     }
-
 }

@@ -139,7 +139,7 @@ public class ReportService {
     }
 
     public List<Map<String, Object>> getCategoryExpenses(LocalDate start, LocalDate end) {
-        return expenseRepository.findByDateBetween(start, end)
+        return expenseRepository.findAllByDateBetween(start, end)
                 .stream()
                 .filter(expense -> expense.getCategory() != null)
                 .collect(java.util.stream.Collectors.groupingBy(
