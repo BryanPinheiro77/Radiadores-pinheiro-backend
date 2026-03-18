@@ -1,19 +1,21 @@
 package com.radiadorespinheiro.expense.controller;
 
-import com.radiadorespinheiro.expense.domain.ExpenseCategory;
 import com.radiadorespinheiro.expense.dto.ExpenseRequest;
 import com.radiadorespinheiro.expense.dto.ExpenseResponse;
 import com.radiadorespinheiro.expense.service.ExpenseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Tag(name = "Expenses", description = "Expense management endpoints")
 @RestController
@@ -25,8 +27,9 @@ public class ExpenseController {
 
     @Operation(summary = "List all expenses")
     @GetMapping
-    public ResponseEntity<List<ExpenseResponse>> findAll() {
-        return ResponseEntity.ok(expenseService.findAll());
+    public ResponseEntity<Page<ExpenseResponse>> findAll(
+            @PageableDefault(size = 20, sort = "date", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(expenseService.findAll(pageable));
     }
 
     @Operation(summary = "Find expense by ID")
@@ -37,19 +40,13 @@ public class ExpenseController {
 
     @Operation(summary = "Filter expenses by date range and/or category")
     @GetMapping("/filter")
-    public ResponseEntity<List<ExpenseResponse>> filter(
+    public ResponseEntity<Page<ExpenseResponse>> filter(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end,
-            @RequestParam(required = false) Long categoryId) {
+            @RequestParam(required = false) Long categoryId,
+            @PageableDefault(size = 20, sort = "date", direction = Sort.Direction.DESC) Pageable pageable) {
 
-        if (start != null && end != null && categoryId != null) {
-            return ResponseEntity.ok(expenseService.findByPeriodAndCategory(start, end, categoryId));
-        } else if (start != null && end != null) {
-            return ResponseEntity.ok(expenseService.findByPeriod(start, end));
-        } else if (categoryId != null) {
-            return ResponseEntity.ok(expenseService.findByCategory(categoryId));
-        }
-        return ResponseEntity.ok(expenseService.findAll());
+        return ResponseEntity.ok(expenseService.filter(start, end, categoryId, pageable));
     }
 
     @Operation(summary = "Create expense")

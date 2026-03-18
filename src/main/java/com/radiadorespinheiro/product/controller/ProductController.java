@@ -1,16 +1,16 @@
 package com.radiadorespinheiro.product.controller;
 
-
 import com.radiadorespinheiro.product.dto.ProductPatchRequest;
 import com.radiadorespinheiro.product.dto.ProductRequest;
 import com.radiadorespinheiro.product.dto.ProductResponse;
 import com.radiadorespinheiro.product.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @Tag(name = "Products", description = "Product management endpoints")
 @RestController
@@ -21,23 +21,26 @@ public class ProductController {
 
     public ProductController(ProductService productService) {
         this.productService = productService;
-     }
+    }
 
     @Operation(summary = "Create Product", description = "Creates a new product")
-     @PostMapping
+    @PostMapping
     public ResponseEntity<ProductResponse> create(@RequestBody ProductRequest request) {
         return ResponseEntity.ok(productService.create(request));
-     }
+    }
 
-    @Operation(summary = "Find all Products", description = "find a products")
-     @GetMapping ResponseEntity<List<ProductResponse>> findAll() {
-        return ResponseEntity.ok(productService.findAll());
+    @Operation(summary = "Find all Products", description = "Find paginated products")
+    @GetMapping
+    public ResponseEntity<Page<ProductResponse>> findAll(
+            @PageableDefault(size = 20, sort = "id") Pageable pageable) {
+        return ResponseEntity.ok(productService.findAll(pageable));
     }
 
     @Operation(summary = "List active products")
     @GetMapping("/active")
-    public ResponseEntity<List<ProductResponse>> findActive() {
-        return ResponseEntity.ok(productService.findActive());
+    public ResponseEntity<Page<ProductResponse>> findActive(
+            @PageableDefault(size = 20, sort = "id") Pageable pageable) {
+        return ResponseEntity.ok(productService.findActive(pageable));
     }
 
     @Operation(summary = "Find product by ID")
@@ -65,9 +68,9 @@ public class ProductController {
     }
 
     @Operation(summary = "Delete product")
-     @DeleteMapping("/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-         productService.delete(id);
-         return ResponseEntity.noContent().build();
-     }
+        productService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
 }
