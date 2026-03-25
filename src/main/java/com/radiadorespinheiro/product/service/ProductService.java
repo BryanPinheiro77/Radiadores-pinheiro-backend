@@ -8,9 +8,12 @@ import com.radiadorespinheiro.product.dto.ProductPatchRequest;
 import com.radiadorespinheiro.product.dto.ProductRequest;
 import com.radiadorespinheiro.product.dto.ProductResponse;
 import com.radiadorespinheiro.product.repository.ProductRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ProductService {
@@ -23,6 +26,7 @@ public class ProductService {
         this.categoryRepository = categoryRepository;
     }
 
+    @CacheEvict(value = {"products", "products-active", "dashboard-summary"}, allEntries = true)
     public ProductResponse create(ProductRequest request) {
         Category category = resolveCategory(request.categoryId());
         Product product = Product.builder()
@@ -38,22 +42,26 @@ public class ProductService {
         return toResponse(productRepository.save(product));
     }
 
-    public List<ProductResponse> findAll() {
-        return productRepository.findAll().stream()
-                .map(this::toResponse)
-                .toList();
+    @Transactional(readOnly = true)
+    public Page<ProductResponse> findAll(Pageable pageable) {
+        pageable = normalizePageable(pageable);
+        return productRepository.findAll(pageable)
+                .map(this::toResponse);
     }
 
-    public List<ProductResponse> findActive() {
-        return productRepository.findByActiveTrue().stream()
-                .map(this::toResponse)
-                .toList();
+    @Transactional(readOnly = true)
+    public Page<ProductResponse> findActive(Pageable pageable) {
+        pageable = normalizePageable(pageable);
+        return productRepository.findByActiveTrue(pageable)
+                .map(this::toResponse);
     }
 
+    @Transactional(readOnly = true)
     public ProductResponse findById(Long id) {
         return toResponse(findOrThrow(id));
     }
 
+    @CacheEvict(value = {"products", "products-active", "dashboard-summary"}, allEntries = true)
     public ProductResponse update(Long id, ProductRequest request) {
         Product product = findOrThrow(id);
         Category category = resolveCategory(request.categoryId());
@@ -67,6 +75,7 @@ public class ProductService {
         return toResponse(productRepository.save(product));
     }
 
+    @CacheEvict(value = {"products", "products-active", "dashboard-summary"}, allEntries = true)
     public ProductResponse patch(Long id, ProductPatchRequest request) {
         Product product = findOrThrow(id);
         if (request.name() != null && !request.name().isBlank()) product.setName(request.name());
@@ -79,10 +88,17 @@ public class ProductService {
         return toResponse(productRepository.save(product));
     }
 
+    @CacheEvict(value = {"products", "products-active", "dashboard-summary"}, allEntries = true)
     public ProductResponse toggleActive(Long id) {
         Product product = findOrThrow(id);
         product.setActive(!product.getActive());
         return toResponse(productRepository.save(product));
+    }
+
+    @CacheEvict(value = {"products", "products-active", "dashboard-summary"}, allEntries = true)
+    public void delete(Long id) {
+        findOrThrow(id);
+        productRepository.deleteById(id);
     }
 
     private Category resolveCategory(Long categoryId) {
@@ -96,10 +112,14 @@ public class ProductService {
                 .orElseThrow(() -> new BusinessException("Product not found with id: " + id));
     }
 
-    public Product delete(Long id) {
-        findOrThrow(id);
-        productRepository.deleteById(id);
-        return null;
+    private Pageable normalizePageable(Pageable pageable) {
+        int maxSize = 50;
+        int size = Math.min(pageable.getPageSize(), maxSize);
+        return PageRequest.of(
+                pageable.getPageNumber(),
+                size,
+                pageable.getSort()
+        );
     }
 
     private ProductResponse toResponse(Product p) {

@@ -11,9 +11,11 @@ import com.radiadorespinheiro.sale.domain.SaleItem;
 import com.radiadorespinheiro.sale.dto.*;
 import com.radiadorespinheiro.sale.repository.SaleRepository;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.CacheEvict;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -32,6 +34,7 @@ public class SaleService {
         this.categoryRepository = categoryRepository;
     }
 
+    @CacheEvict(value = "dashboard-summary", allEntries = true)
     @Transactional
     public SaleResponse create(SaleRequest request) {
         List<SaleItem> items = request.items().stream()
@@ -74,10 +77,12 @@ public class SaleService {
         return toResponse(saleRepository.save(sale));
     }
 
+    @Transactional(readOnly = true)
     public Page<SaleResponse> findAll(Pageable pageable) {
         return saleRepository.findAll(pageable).map(this::toResponse);
     }
 
+    @Transactional(readOnly = true)
     public SaleResponse findById(Long id) {
         return toResponse(findOrThrow(id));
     }
@@ -125,6 +130,7 @@ public class SaleService {
                 .build();
     }
 
+    @CacheEvict(value = "dashboard-summary", allEntries = true)
     @Transactional
     public void delete(Long id) {
         Sale sale = findOrThrow(id);
@@ -143,6 +149,16 @@ public class SaleService {
     private Sale findOrThrow(Long id) {
         return saleRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Sale not found with id: " + id));
+    }
+
+    private Pageable normalizePageable(Pageable pageable) {
+        int maxSize = 50;
+        int size = Math.min(pageable.getPageSize(), maxSize);
+        return PageRequest.of(
+                pageable.getPageNumber(),
+                size,
+                pageable.getSort()
+        );
     }
 
     private SaleResponse toResponse(Sale sale) {
