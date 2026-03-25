@@ -41,7 +41,7 @@ public class Expense {
     private Integer currentInstallment;
 
     @ManyToOne
-    @JoinColumn(name = "category_id", nullable = false)
+    @JoinColumn(name = "category_id")
     private ExpenseCategory category;
 
     @Column
