@@ -40,30 +40,37 @@ public class ExpenseService {
     }
 
     @CacheEvict(value = "dashboard-summary", allEntries = true)
+    @Transactional
     public ExpenseResponse save(ExpenseRequest request) {
-        ExpenseCategory category = expenseCategoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
+        validateRequest(request);
 
-        if (request.getExpenseType() == ExpenseType.INSTALLMENT && request.getTotalInstallments() != null) {
+        ExpenseCategory category = resolveCategory(request.getCategoryId());
+        ExpenseType expenseType = request.getExpenseType() != null
+                ? request.getExpenseType()
+                : ExpenseType.SINGLE;
+
+        if (expenseType == ExpenseType.INSTALLMENT) {
+            int totalInstallments = request.getTotalInstallments();
+
             List<Expense> installments = new ArrayList<>();
 
-            for (int i = 1; i <= request.getTotalInstallments(); i++) {
+            for (int i = 1; i <= totalInstallments; i++) {
                 Expense expense = Expense.builder()
-                        .description(request.getDescription() + " (" + i + "/" + request.getTotalInstallments() + ")")
+                        .description(request.getDescription() + " (" + i + "/" + totalInstallments + ")")
                         .value(request.getValue())
                         .date(request.getDate().plusMonths(i - 1))
                         .category(category)
                         .notes(request.getNotes())
                         .expenseType(ExpenseType.INSTALLMENT)
-                        .totalInstallments(request.getTotalInstallments())
+                        .totalInstallments(totalInstallments)
                         .currentInstallment(i)
                         .build();
 
                 installments.add(expense);
             }
 
-            expenseRepository.saveAll(installments);
-            return toResponse(installments.get(0));
+            List<Expense> savedInstallments = expenseRepository.saveAll(installments);
+            return toResponse(savedInstallments.get(0));
         }
 
         Expense expense = Expense.builder()
@@ -72,7 +79,7 @@ public class ExpenseService {
                 .date(request.getDate())
                 .category(category)
                 .notes(request.getNotes())
-                .expenseType(request.getExpenseType() != null ? request.getExpenseType() : ExpenseType.SINGLE)
+                .expenseType(expenseType)
                 .totalInstallments(null)
                 .currentInstallment(null)
                 .build();
@@ -81,23 +88,40 @@ public class ExpenseService {
     }
 
     @CacheEvict(value = "dashboard-summary", allEntries = true)
+    @Transactional
     public ExpenseResponse update(Long id, ExpenseRequest request) {
+        validateRequest(request);
+
         Expense existing = expenseRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Despesa não encontrada: " + id));
 
-        ExpenseCategory category = expenseCategoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new RuntimeException("Categoria não encontrada: " + request.getCategoryId()));
+        ExpenseCategory category = resolveCategory(request.getCategoryId());
+        ExpenseType expenseType = request.getExpenseType() != null
+                ? request.getExpenseType()
+                : ExpenseType.SINGLE;
 
         existing.setDescription(request.getDescription());
         existing.setValue(request.getValue());
         existing.setDate(request.getDate());
         existing.setCategory(category);
         existing.setNotes(request.getNotes());
+        existing.setExpenseType(expenseType);
+
+        if (expenseType == ExpenseType.INSTALLMENT) {
+            existing.setTotalInstallments(request.getTotalInstallments());
+            existing.setCurrentInstallment(
+                    existing.getCurrentInstallment() != null ? existing.getCurrentInstallment() : 1
+            );
+        } else {
+            existing.setTotalInstallments(null);
+            existing.setCurrentInstallment(null);
+        }
 
         return toResponse(expenseRepository.save(existing));
     }
 
     @CacheEvict(value = "dashboard-summary", allEntries = true)
+    @Transactional
     public void delete(Long id) {
         Expense expense = expenseRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Despesa não encontrada: " + id));
@@ -133,6 +157,43 @@ public class ExpenseService {
 
     public void deleteCategory(Long id) {
         expenseCategoryRepository.deleteById(id);
+    }
+
+    private ExpenseCategory resolveCategory(Long categoryId) {
+        if (categoryId == null) {
+            return null;
+        }
+
+        return expenseCategoryRepository.findById(categoryId)
+                .orElseThrow(() -> new RuntimeException("Categoria não encontrada: " + categoryId));
+    }
+
+    private void validateRequest(ExpenseRequest request) {
+        if (request == null) {
+            throw new RuntimeException("Requisição de despesa inválida");
+        }
+
+        if (request.getDescription() == null || request.getDescription().isBlank()) {
+            throw new RuntimeException("Descrição é obrigatória");
+        }
+
+        if (request.getValue() == null) {
+            throw new RuntimeException("Valor é obrigatório");
+        }
+
+        if (request.getDate() == null) {
+            throw new RuntimeException("Data é obrigatória");
+        }
+
+        ExpenseType expenseType = request.getExpenseType() != null
+                ? request.getExpenseType()
+                : ExpenseType.SINGLE;
+
+        if (expenseType == ExpenseType.INSTALLMENT) {
+            if (request.getTotalInstallments() == null || request.getTotalInstallments() < 2) {
+                throw new RuntimeException("Número de parcelas inválido");
+            }
+        }
     }
 
     private Pageable normalizePageable(Pageable pageable) {
