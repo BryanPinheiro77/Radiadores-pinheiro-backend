@@ -8,10 +8,12 @@ import com.radiadorespinheiro.product.dto.ProductPatchRequest;
 import com.radiadorespinheiro.product.dto.ProductRequest;
 import com.radiadorespinheiro.product.dto.ProductResponse;
 import com.radiadorespinheiro.product.repository.ProductRepository;
+import com.radiadorespinheiro.product.repository.specification.ProductSpecification;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,17 +45,21 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public Page<ProductResponse> findAll(Pageable pageable) {
+    public Page<ProductResponse> findAll(String search, Long categoryId, Boolean active, Pageable pageable) {
         pageable = normalizePageable(pageable);
-        return productRepository.findAll(pageable)
+
+        Specification<Product> spec = Specification
+                .where(ProductSpecification.nameContains(search))
+                .and(ProductSpecification.categoryEquals(categoryId))
+                .and(ProductSpecification.activeEquals(active));
+
+        return productRepository.findAll(spec, pageable)
                 .map(this::toResponse);
     }
 
     @Transactional(readOnly = true)
     public Page<ProductResponse> findActive(Pageable pageable) {
-        pageable = normalizePageable(pageable);
-        return productRepository.findByActiveTrue(pageable)
-                .map(this::toResponse);
+        return findAll(null, null, true, pageable);
     }
 
     @Transactional(readOnly = true)
@@ -85,6 +91,7 @@ public class ProductService {
         if (request.stock() != null) product.setStock(request.stock());
         if (request.minStock() != null) product.setMinStock(request.minStock());
         if (request.categoryId() != null) product.setCategory(resolveCategory(request.categoryId()));
+        if (request.active() != null) product.setActive(request.active());
         return toResponse(productRepository.save(product));
     }
 
@@ -124,9 +131,14 @@ public class ProductService {
 
     private ProductResponse toResponse(Product p) {
         return new ProductResponse(
-                p.getId(), p.getName(), p.getDescription(),
-                p.getCostPrice(), p.getSalePrice(),
-                p.getStock(), p.getMinStock(), p.getActive(),
+                p.getId(),
+                p.getName(),
+                p.getDescription(),
+                p.getCostPrice(),
+                p.getSalePrice(),
+                p.getStock(),
+                p.getMinStock(),
+                p.getActive(),
                 p.getCategory() != null ? p.getCategory().getName() : null
         );
     }
