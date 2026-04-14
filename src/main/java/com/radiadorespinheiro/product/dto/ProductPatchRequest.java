@@ -9,5 +9,7 @@ public record ProductPatchRequest(
         BigDecimal salePrice,
         Integer stock,
         Integer minStock,
-        Long categoryId
-) {}
+        Long categoryId,
+        Boolean active
+) {
+}

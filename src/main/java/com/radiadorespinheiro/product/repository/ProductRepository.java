@@ -4,16 +4,12 @@ import com.radiadorespinheiro.product.domain.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.List;
 
-public interface ProductRepository extends JpaRepository<Product, Long> {
+public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
 
-    Page<Product> findByActiveTrue(Pageable pageable);
-
-    Page<Product> findByCategory_Id(Long categoryId, Pageable pageable);
-
-    // Métodos para uso interno
     List<Product> findAllByCategory_Id(Long categoryId);
 
     List<Product> findAllByActiveTrue();

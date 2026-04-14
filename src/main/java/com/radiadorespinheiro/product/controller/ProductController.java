@@ -29,18 +29,23 @@ public class ProductController {
         return ResponseEntity.ok(productService.create(request));
     }
 
-    @Operation(summary = "Find all Products", description = "Find paginated products")
+    @Operation(summary = "Find all Products", description = "Find paginated products with optional filters")
     @GetMapping
     public ResponseEntity<Page<ProductResponse>> findAll(
-            @PageableDefault(size = 20, sort = "id") Pageable pageable) {
-        return ResponseEntity.ok(productService.findAll(pageable));
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Boolean active,
+            @PageableDefault(size = 20, sort = "name") Pageable pageable) {
+        return ResponseEntity.ok(productService.findAll(search, categoryId, active, pageable));
     }
 
     @Operation(summary = "List active products")
     @GetMapping("/active")
     public ResponseEntity<Page<ProductResponse>> findActive(
-            @PageableDefault(size = 20, sort = "id") Pageable pageable) {
-        return ResponseEntity.ok(productService.findActive(pageable));
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Long categoryId,
+            @PageableDefault(size = 20, sort = "name") Pageable pageable) {
+        return ResponseEntity.ok(productService.findAll(search, categoryId, true, pageable));
     }
 
     @Operation(summary = "Find product by ID")
